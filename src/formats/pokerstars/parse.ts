@@ -7,7 +7,7 @@
  */
 
 import { Temporal } from '@js-temporal/polyfill';
-import * as Poker from '../../index.ts';
+import * as Poker from '../../index';
 
 // Regex patterns for parsing different parts of the hand history
 const HAND_HEADER_REGEX = /^(.*?) Hand #(\d+):.*? - (.*)$/;
