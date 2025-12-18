@@ -67,7 +67,7 @@ export interface Game {
   /** Rake cap used to limit the rake amount */
   rakeCap?: number;
   /** Game statistics tracker */
-  stats: readonly StreetStat[];
+  stats: StreetStat[];
   /** Index of the next player to act */
   nextPlayerIndex: number;
   /** Whether the hand is a showdown hand */

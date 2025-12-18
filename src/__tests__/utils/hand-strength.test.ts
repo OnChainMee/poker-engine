@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import {
   analyzeCards,
   calculateHandStrength,
@@ -11,6 +12,8 @@ import {
 } from '../../game/evaluation';
 import { Card } from '../../types';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const filePath = path.join(__dirname, '../fixtures/7cards.csv');
 const fileContent = fs.readFileSync(filePath, 'utf-8');
 const rows = fileContent.trim().split('\n');
