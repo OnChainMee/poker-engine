@@ -1,0 +1,57 @@
+import * as Poker from '../..';
+
+describe('Hand Evaluation', () => {
+  it('should handle muck', () => {
+    const game = Poker.Game({
+      venue: 'PokerStars',
+      variant: 'NT',
+      currency: 'USD',
+      timestamp: 1725822367000,
+      timeZone: 'UTC',
+      players: ['Becar_06', 'aoish30', '4ih©KZ', 'easy_sarcasm', 'Manifestorr', 'GasolinaGOE'],
+      startingStacks: [41.5, 101, 10, 107.78, 100, 191.54],
+      blindsOrStraddles: [0, 0, 0, 0, 0.5, 1],
+      antes: [0, 0, 0, 0, 0, 0],
+      minBet: 1,
+      actions: [
+        'd dh p1 ????',
+        'd dh p2 ????',
+        'd dh p3 ????',
+        'd dh p4 ????',
+        'd dh p5 ????',
+        'd dh p6 ????',
+        'p1 f',
+        'p2 f',
+        'p3 cbr 10',
+        'p4 f',
+        'p5 cc',
+        'p6 cc',
+        'd db 6cKd8d',
+        'p5 cc',
+        'p6 cc',
+        'd db 4c',
+        'p5 cc',
+        'p6 cc',
+        'd db 2c',
+        'p5 cc',
+        'p6 cc',
+        'p5 sm AdQh',
+        'p6 sm TcTd',
+        'p3 sm',
+      ],
+      year: 2024,
+      month: 9,
+      day: 9,
+      time: '03:06:07',
+      table: 'Lesya II',
+      isRunOut: false,
+      hand: 0,
+      seatCount: 6,
+      rake: 1.5,
+      totalPot: 30,
+      seats: [1, 2, 3, 4, 5, 6],
+      bigBlind: 1,
+    });
+    expect(game.isComplete).toBe(true);
+  });
+});

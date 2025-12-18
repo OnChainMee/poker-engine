@@ -1,0 +1,60 @@
+import * as Poker from '../..';
+
+describe('Hand Evaluation', () => {
+  it('should handle muck', () => {
+    expect(() =>
+      Poker.Game({
+        venue: 'PokerStars',
+        variant: 'NT',
+        currency: 'USD',
+        timestamp: 1725747473000,
+        timeZone: 'UTC',
+        players: ['AlexPinsk1', 'Mislin', 'Joker007r', 'ru_ruu_ru', 'tatranto', 'Mr_Dick666'],
+        startingStacks: [101.81, 236.58, 136.98, 196.3, 100.28, 100],
+        blindsOrStraddles: [0.5, 1, 0, 0, 0, 0],
+        antes: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+        actions: [
+          'd dh p1 ????',
+          'd dh p2 ????',
+          'd dh p3 ????',
+          'd dh p4 ????',
+          'd dh p5 ????',
+          'd dh p6 ????',
+          'p3 f',
+          'p4 f',
+          'p5 f',
+          'p6 cbr 2.5',
+          'p1 f',
+          'p2 cc',
+          'd db 8h2cTh',
+          'p2 cc',
+          'p6 cbr 5.41',
+          'p2 cc',
+          'd db 2h',
+          'p2 cc',
+          'p6 cbr 8.32',
+          'p2 cc',
+          'd db 2d',
+          'p2 cc',
+          'p6 cbr 21.63',
+          'p2 cc',
+          'p6 sm QhQd',
+          'p2 sm',
+        ],
+        minBet: 0.2,
+        year: 2024,
+        month: 9,
+        day: 8,
+        time: '06:17:53',
+        table: 'Orma II',
+        isRunOut: false,
+        hand: 0,
+        seatCount: 6,
+        rake: 2.5,
+        totalPot: 77.42,
+        seats: [1, 2, 3, 4, 5, 6],
+        bigBlind: 1,
+      })
+    ).not.toThrow();
+  });
+});

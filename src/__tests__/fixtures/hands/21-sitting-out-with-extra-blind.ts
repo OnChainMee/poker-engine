@@ -1,0 +1,217 @@
+import type { HandFixture } from '../../../types';
+
+export const fixture: HandFixture = {
+  title: '21-sitting-out-with-extra-blind',
+  description: 'Tests hand with one player sitting out and an unusual extra small blind posting',
+  input: `
+PokerStars Hand #254023500531:  Hold'em No Limit ($0.50/$1.00 USD) - 2024/12/25 16:03:55 ET
+Table 'Patricia II' 6-max Seat #5 is the button
+Seat 2: Be_castelo1 ($0.05 in chips) is sitting out
+Seat 1: XneferX ($194.65 in chips)
+Seat 3: macca1470 ($100 in chips)
+Seat 4: illarins ($100 in chips)
+Seat 5: K.Antagonist ($287.43 in chips)
+Seat 6: Ship4545 ($78.60 in chips)
+Ship4545: posts small blind $0.50
+XneferX: posts big blind $1
+macca1470: posts small blind $0.50
+*** HOLE CARDS ***
+macca1470: folds
+illarins: raises $2 to $3
+K.Antagonist: raises $6 to $9
+Ship4545: folds
+XneferX: folds
+illarins: folds
+Uncalled bet ($6) returned to K.Antagonist
+K.Antagonist collected $8 from pot
+*** SUMMARY ***
+Total pot $8 | Rake $0
+Seat 2: Be_castelo1
+Seat 1: XneferX (big blind) folded before Flop
+Seat 3: macca1470 folded before Flop (didn't bet)
+Seat 4: illarins folded before Flop
+Seat 5: K.Antagonist (button) collected ($8)
+Seat 6: Ship4545 (small blind) folded before Flop
+`,
+  output: {
+    _deadBlinds: [0, 0, 0.5, 0, 0, 0],
+    _inactive: [0, 1, 0, 0, 0, 0],
+    actions: [
+      'd dh p1 ????',
+      'd dh p3 ????',
+      'd dh p4 ????',
+      'd dh p5 ????',
+      'd dh p6 ????',
+      'p3 f',
+      'p4 cbr 3',
+      'p5 cbr 9',
+      'p6 f',
+      'p1 f',
+      'p4 f',
+    ],
+    antes: [0, 0, 0, 0, 0, 0],
+    blindsOrStraddles: [1, 0, 0, 0, 0, 0.5],
+    currency: 'USD',
+    day: 25,
+    hand: 254023500531,
+    minBet: 1,
+    month: 12,
+    players: ['XneferX', 'Be_castelo1', 'macca1470', 'illarins', 'K.Antagonist', 'Ship4545'],
+    rake: 0,
+    seatCount: 6,
+    seats: [2, 1, 3, 4, 5, 6],
+    startingStacks: [194.65, 0.05, 100, 100, 287.43, 78.6],
+    table: 'Patricia II',
+    time: '2024-12-25T16:03:55',
+    timeZone: 'ET',
+    totalPot: 8,
+    variant: 'NT',
+    venue: 'PokerStars',
+    year: 2024,
+    timestamp: 1735160635000,
+  },
+  game: {
+    isRunOut: false,
+    players: [
+      {
+        name: 'XneferX',
+        stack: 193.65,
+        position: 0,
+        cards: ['??', '??'],
+        hasFolded: true,
+        hasActed: true,
+        roundBet: 0,
+        totalBet: 1,
+        isAllIn: false,
+        hasShownCards: null,
+        rake: 0,
+        winnings: 0,
+        isInactive: false,
+        returns: 0,
+        totalInvestments: 0,
+        roundInvestments: 0,
+        roundAction: null,
+      },
+      {
+        name: 'Be_castelo1',
+        stack: 0.05,
+        position: 1,
+        cards: [],
+        hasFolded: false,
+        hasActed: false,
+        roundBet: 0,
+        totalBet: 0,
+        isAllIn: false,
+        hasShownCards: null,
+        rake: 0,
+        winnings: 0,
+        isInactive: true,
+        returns: 0,
+        totalInvestments: 0,
+        roundInvestments: 0,
+        roundAction: null,
+      },
+      {
+        name: 'macca1470',
+        stack: 99.5,
+        position: 2,
+        cards: ['??', '??'],
+        hasFolded: true,
+        hasActed: true,
+        roundBet: 0,
+        totalBet: 0.5,
+        isAllIn: false,
+        hasShownCards: null,
+        rake: 0,
+        winnings: 0,
+        isInactive: false,
+        returns: 0,
+        totalInvestments: 0,
+        roundInvestments: 0,
+        roundAction: null,
+      },
+      {
+        name: 'illarins',
+        stack: 97,
+        position: 3,
+        cards: ['??', '??'],
+        hasFolded: true,
+        hasActed: true,
+        roundBet: 0,
+        totalBet: 3,
+        isAllIn: false,
+        hasShownCards: null,
+        rake: 0,
+        winnings: 0,
+        isInactive: false,
+        returns: 0,
+        totalInvestments: 0,
+        roundInvestments: 0,
+        roundAction: null,
+      },
+      {
+        name: 'K.Antagonist',
+        stack: 295.43,
+        position: 4,
+        cards: ['??', '??'],
+        hasFolded: false,
+        hasActed: true,
+        roundBet: 0,
+        totalBet: 3,
+        isAllIn: false,
+        hasShownCards: null,
+        rake: 0,
+        winnings: 8,
+        isInactive: false,
+        returns: 0,
+        totalInvestments: 0,
+        roundInvestments: 0,
+        roundAction: null,
+      },
+      {
+        name: 'Ship4545',
+        stack: 78.1,
+        position: 5,
+        cards: ['??', '??'],
+        hasFolded: true,
+        hasActed: true,
+        roundBet: 0,
+        totalBet: 0.5,
+        isAllIn: false,
+        hasShownCards: null,
+        rake: 0,
+        winnings: 0,
+        isInactive: false,
+        returns: 0,
+        totalInvestments: 0,
+        roundInvestments: 0,
+        roundAction: null,
+      },
+    ],
+    board: [],
+    street: 'preflop',
+    buttonIndex: 4,
+    smallBlindIndex: 5,
+    bigBlindIndex: 0,
+    bet: 0,
+    variant: 'NT',
+    venue: 'PokerStars',
+    usedCards: 0,
+    isBettingComplete: true,
+    lastAction: 'p4 f',
+    lastBetAction: 'p5 cbr 9',
+    lastPlayerAction: 'p4 f',
+    isComplete: true,
+    rake: 0,
+    pot: 8,
+    rakePercentage: 0,
+    table: 'Patricia II',
+    hand: 254023500531,
+    bigBlind: 1,
+    stats: [],
+    isShowdown: false,
+    nextPlayerIndex: -1,
+    gameTimestamp: expect.any(Number),
+    lastTimestamp: expect.any(Number),
+  },
+};

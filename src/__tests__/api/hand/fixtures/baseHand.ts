@@ -1,0 +1,91 @@
+import type { Hand } from '../../../../Hand';
+
+/**
+ * BASE_HAND fixture - The single source of truth for all Hand API tests
+ *
+ * Represents a complete 3-player No-Limit Texas Hold'em game from start to showdown.
+ * This is the ONLY fixture used across all Hand tests to ensure consistency.
+ */
+export const BASE_HAND = {
+  variant: 'NT',
+  players: ['Alice', 'Bob', 'Charlie'],
+  startingStacks: [1000, 1000, 1000],
+  blindsOrStraddles: [0, 10, 20],
+  antes: [0, 0, 0],
+  actions: [
+    'd dh p1 6c5h #1756734331690',
+    'd dh p2 Jc2s #1756734331691',
+    'd dh p3 Tc3c #1756734331691',
+    'p1 cc #1756734331691',
+    'p2 cc #1756734331691',
+    'p3 cc #1756734331691',
+    'd db 8s2dJs #1756734331691',
+    'p2 cc #1756734331692',
+    'p3 cc #1756734331692',
+    'p1 cc #1756734331692',
+    'd db Kh #1756734331692',
+    'p2 cc #1756734331692',
+    'p3 cc #1756734331692',
+    'p1 cc #1756734331692',
+    'd db Qd #1756734331692',
+    'p2 cc #1756734331692',
+    'p3 cc #1756734331692',
+    'p1 cc #1756734331692',
+    'p2 sm Jc2s #1756734331692',
+    'p3 sm Tc3c #1756734331692',
+    'p1 sm 6c5h #1756734331692',
+  ],
+  minBet: 20,
+  seed: 12345,
+} as const satisfies Hand;
+
+export const BASE_HAND_PARSED: Hand = {
+  venue: 'PokerStars',
+  variant: 'NT',
+  currency: 'USD',
+  timestamp: 1735165507000,
+  timeZone: 'UTC',
+  players: ['XneferX', 'goggy100', 'tintin641', 'Christianzt1', 'Une73', 'kekoccc'],
+  startingStacks: [124.04, 54.53, 100, 125.11, 62.79, 100],
+  blindsOrStraddles: [0, 0, 0, 0.5, 1, 0],
+  antes: [0, 0, 0, 0, 0, 0],
+  actions: [
+    'd dh p1 ????',
+    'd dh p2 ????',
+    'd dh p3 ????',
+    'd dh p4 ????',
+    'd dh p5 ????',
+    'd dh p6 ????',
+    'p6 f',
+    'p1 f',
+    'p2 f',
+    'p3 f',
+    'p4 cbr 3',
+    'p5 cc',
+    'd db Qd2h2s',
+    'p4 cbr 1.42',
+    'p5 cc',
+    'd db 2c',
+    'p4 cc',
+    'p5 cbr 4.2',
+    'p4 cc',
+    'd db 5s',
+    'p4 cc',
+    'p5 cc',
+    'p4 sm Qh9h',
+    'p5 sm',
+  ],
+  year: 2024,
+  month: 12,
+  day: 26,
+  time: '01:25:07',
+  table: 'Vaticana II',
+  hand: 254024998080,
+  seatCount: 6,
+  rake: 0.86,
+  totalPot: 17.24,
+  seats: [1, 2, 3, 4, 5, 6],
+  minBet: 1,
+};
+
+export const BASE_HAND_POKERSTARS = `PokerStars Hand #254024998080:  Hold'em No Limit ($0.50/$1 USD) - 2024/12/25 17:25:07 ET\nTable 'Vaticana II' 6-max Seat #3 is the button\nSeat 1: XneferX ($124.04 in chips)\nSeat 2: goggy100 ($54.53 in chips)\nSeat 3: tintin641 ($100 in chips)\nSeat 4: Christianzt1 ($125.11 in chips)\nSeat 5: Une73 ($62.79 in chips)\nSeat 6: kekoccc ($100 in chips)\nChristianzt1: posts small blind $0.50\nUne73: posts big blind $1\n*** HOLE CARDS ***\nkekoccc: folds\nXneferX: folds\ngoggy100: folds\ntintin641: folds\nChristianzt1: raises $2 to $3\nUne73: calls $2\n*** FLOP *** [Qd 2h 2s]\nChristianzt1: bets $1.42\nUne73: calls $1.42\n*** TURN *** [Qd 2h 2s] [2c]\nChristianzt1: checks\nUne73: bets $4.20\nChristianzt1: calls $4.20\n*** RIVER *** [Qd 2h 2s 2c] [5s]\nChristianzt1: checks\nUne73: checks\n*** SHOW DOWN ***\nChristianzt1: shows [Qh 9h] (a full house, Deuces full of Queens)\nUne73: mucks hand\n*** SUMMARY ***\nTotal pot $17.24 | Rake $0.86\nBoard [Qd 2h 2s 2c 5s]\nSeat 1: XneferX folded before Flop (didn't bet)\nSeat 2: goggy100 folded before Flop (didn't bet)\nSeat 3: tintin641 (button) folded before Flop (didn't bet)\nSeat 4: Christianzt1 (small blind) shows Queen of Hearts, Nine of Hearts, got combination a full house, Deuces full of Queens\nSeat 5: Une73 (big blind)\nSeat 6: kekoccc folded before Flop (didn't bet)`;
