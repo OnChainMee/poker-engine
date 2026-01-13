@@ -298,7 +298,7 @@ export namespace Game {
     return player.name;
   }
 
-  export function getPlayer(game: Game, playerIdentifier: PlayerIdentifier) {
+  export function getPlayer(game: Game, playerIdentifier: PlayerIdentifier): Player | undefined {
     return game.players[getPlayerIndex(game, playerIdentifier)];
   }
 

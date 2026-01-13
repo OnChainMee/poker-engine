@@ -1399,3 +1399,114 @@ function getRobustFinalPot(players: any[], hand: Hand): number | undefined {
   const pot = others.reduce((sum, p) => sum + (p.totalBet || 0), 0) + winnerBet + anteSum;
   return pot;
 }
+
+/**
+ * This function isn't specific to PokerStars, but it does reuse most of the
+ * narration functions from this file.
+ * @param hand 
+ * @returns 
+ */
+export function gameLog(hand: Hand): string[] {
+  const game = Game(hand);
+  const currency = hand.currency || 'USD';
+
+  // 1. Resolve Hand Setup
+  const setupInfo = resolveHandSetupInfo(hand, game);
+  const { seatInfo, buttonIdx, sbIdx, bbIdx, nominalSbValue, nominalBbValueForHeader } = setupInfo;
+
+  const output: string[] = [];
+  const { streets: parsedStreets } = parseActionsToStreets(hand.actions);
+
+  let runningStacks = hand.startingStacks.slice();
+  const allStreetResults: AllStreetBetResults = {
+    preflop: null,
+    flop: null,
+    turn: null,
+    river: null,
+  };
+
+  const preflopInitialBet = hand.blindsOrStraddles[bbIdx] || 0;
+  allStreetResults.preflop = narrateStreet(
+    parsedStreets.preflop,
+    hand,
+    game,
+    currency,
+    'preflop',
+    runningStacks,
+    preflopInitialBet
+  );
+
+  if (allStreetResults.preflop) {
+    output.push(...allStreetResults.preflop.narrationLines);
+    runningStacks = allStreetResults.preflop.stacksAtStreetEnd;
+  }
+
+  if (game.board.length >= 3) {
+    // Check actual table.board from createGame
+    output.push(`*** FLOP ***`);
+    allStreetResults.flop = narrateStreet(
+      parsedStreets.flop,
+      hand,
+      game,
+      currency,
+      'flop',
+      runningStacks
+    );
+    if (allStreetResults.flop) {
+      output.push(...allStreetResults.flop.narrationLines);
+      runningStacks = allStreetResults.flop.stacksAtStreetEnd;
+    }
+  }
+
+  if (game.board.length >= 4) {
+    output.push(`*** TURN ***`);
+    allStreetResults.turn = narrateStreet(
+      parsedStreets.turn,
+      hand,
+      game,
+      currency,
+      'turn',
+      runningStacks
+    );
+    if (allStreetResults.turn) {
+      output.push(...allStreetResults.turn.narrationLines);
+      runningStacks = allStreetResults.turn.stacksAtStreetEnd;
+    }
+  }
+
+  if (game.board.length === 5) {
+    output.push(`*** RIVER ***`);
+    allStreetResults.river = narrateStreet(
+      parsedStreets.river,
+      hand,
+      game,
+      currency,
+      'river',
+      runningStacks
+    );
+    if (allStreetResults.river) {
+      output.push(...allStreetResults.river.narrationLines);
+      runningStacks = allStreetResults.river.stacksAtStreetEnd;
+    }
+  }
+
+  if (game.isShowdown) {
+    output.push('*** SHOW DOWN ***');
+    output.push(...generateShowdownNarrations(hand, game));
+  }
+
+  if (game.isComplete) {
+    output.push(
+      ...generateEndOfHandResolutionNarrations(
+        hand,
+        game,
+        parsedStreets,
+        allStreetResults,
+        currency
+      )
+    );
+  }
+
+
+  return output
+}

@@ -1,10 +1,10 @@
 {
   "name": "@yuga-labs/poker-engine",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Poker game engine and hand evaluator",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
