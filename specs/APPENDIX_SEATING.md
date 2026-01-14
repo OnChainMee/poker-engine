@@ -1,19 +1,19 @@
-# Спецификация: Sit In & Sit Out
+# Specification: Sit In & Sit Out
 
-## Задача
+## Objective
 
-Реализовать возможность:
+Implement the ability to:
 
-- присоединиться к игре (со следующего раунда)
-- покинуть игру (со следующего раунда)
-- взять паузу (игрок неактивен)
-- дождаться BB (с момента, когда игрок на позиции `BB`)
+- Join a game (starting from the next round)
+- Leave a game (starting from the next round)
+- Take a break (player is inactive)
+- Wait for BB (from the moment when the player is in the `BB` position)
 
-Этот функционал может быть реализован только через изменение игровой нотации, так как только игровая нотация может быть передана между клиентом и сервером.
+This functionality can only be implemented through changes to the game notation, since only game notation can be transmitted between client and server.
 
-Игровая нотация, которую мы используем как основу игрового состояния для обмена между клиентом и сервером, не предусматривает подобного функционала. ПХХ‑нотация предполагает, что игроки определяются до начала игры и остаются в игре на протяжении всей сессии. В то же время нотация PokerStars поддерживает такие сценарии, как возможность временно выйти из игры и затем вернуться.
+The game notation we use as the basis for game state exchange between client and server does not support such functionality. PHH notation assumes that players are determined before the game starts and remain in the game throughout the session. At the same time, PokerStars notation supports scenarios such as the ability to temporarily leave the game and then return.
 
-В движке уже реализована поддержка user-defined полей `_inactive` и `_deadBlinds`, которые и используются для обратной совместимости игровой нотации между форматами phh<->pokerstars
+The engine already implements support for user-defined fields `_inactive` and `_deadBlinds`, which are used for backward compatibility of game notation between phh<->pokerstars formats
 
 ```
 /** Array with one entry per player; any non-zero value means the player is sitting out */
@@ -22,86 +22,86 @@ _inactive?: number[];
 _deadBlinds?: number[];
 ```
 
-Если добавить поле `_intents`, то можно добиться желаемого поведения
+If we add an `_intents` field, we can achieve the desired behavior
 
 ```
 /** Array with one entry per player; can be zero(no pause) and any integer */
 _intents: number[];
 ```
 
-## Архитектурное видение полей состояния
+## Architectural Vision of State Fields
 
-### Разделение ответственности клиент-сервер
+### Client-Server Responsibility Separation
 
-**Поле `_intents`** - это клиентское поле намерений:
+**The `_intents` field** - is a client field for intentions:
 
-- Отражает желание игрока изменить свое состояние (присоединиться, взять паузу, покинуть игру)
-- Игрок может изменять ТОЛЬКО значение `_intents` для себя
-- Все изменения других полей игроком будут проигнорированы сервером
+- Reflects the player's desire to change their state (join, take a break, leave the game)
+- A player can ONLY modify the `_intents` value for themselves
+- All changes to other fields by the player will be ignored by the server
 
-**Поля `_inactive` и `_deadBlinds`** - это серверные поля состояния:
+**The `_inactive` and `_deadBlinds` fields** - are server state fields:
 
-- Управляются исключительно серверной логикой
-- Изменяются сервером на основе анализа `_intents` и игровой ситуации
-- Клиент НЕ МОЖЕТ напрямую изменять эти поля
+- Managed exclusively by server logic
+- Modified by the server based on analysis of `_intents` and the game situation
+- The client CANNOT directly modify these fields
 
-### Поток синхронизации состояния
+### State Synchronization Flow
 
-1. **Клиент → Сервер**: Игрок изменяет `_intents` и отправляет игровое состояние
-2. **Сервер**: Анализирует намерения из `_intents`, валидирует, обновляет `_inactive` и `_deadBlinds`
-3. **Сервер → Клиент**: Отправляет синхронизированное состояние с актуальными значениями всех полей
-4. **Клиент**: Рендерит UI на основе полученного состояния
+1. **Client → Server**: Player modifies `_intents` and sends the game state
+2. **Server**: Analyzes intentions from `_intents`, validates, updates `_inactive` and `_deadBlinds`
+3. **Server → Client**: Sends synchronized state with current values of all fields
+4. **Client**: Renders UI based on the received state
 
-### Значения поля `_intents`
+### Values of the `_intents` Field
 
-- `0` - Игрок хочет играть (активное состояние)
-- `1` - Игрок хочет взять паузу до позиции BB
-- `2` - Игрок хочет взять простую паузу (без привязки к позиции)
-- `3` - Игрок хочет покинуть игру окончательно
+- `0` - Player wants to play (active state)
+- `1` - Player wants to take a break until the BB position
+- `2` - Player wants to take a simple break (not tied to position)
+- `3` - Player wants to leave the game permanently
 
-## Матрица состояний игрока
+## Player State Matrix
 
-Комбинации полей отражают текущее состояние игрока, где:
+Field combinations reflect the player's current state, where:
 
-- `_intents` - намерение игрока (управляется клиентом)
-- `_inactive` и `_deadBlinds` - фактическое состояние (управляется сервером)
+- `_intents` - player's intention (managed by client)
+- `_inactive` and `_deadBlinds` - actual state (managed by server)
 
-| \_inactive | \_intents | \_deadBlinds | Состояние                | Описание                               |
-| :--------: | :-----: | :----------: | ------------------------ | -------------------------------------- |
-|   **0**    |    0    |      0       | **Активная игра**        | Игрок участвует в текущей раздаче      |
-|   **0**    |    1    |      0       | **Запрос паузы до BB**   | Игрок запросил паузу в текущей раздаче |
-|   **0**    |    2    |      0       | **Запрос простой паузы** | Игрок запросил паузу без привязки к BB |
-|   **0**    |    3    |      0       | **Запрос выхода**        | Игрок запросил выход из игры           |
-|   **1**    |    0    |      0       | **Ожидание входа**       | Новый игрок ждет следующей раздачи     |
-|   **1**    |    0    |      >0      | **Готов к возврату**     | Игрок хочет вернуться с оплатой долга  |
-|   **1**    |    1    |    0-1.5     | **Пауза до BB**          | На паузе, ждет позиции BB              |
-|   **1**    |    2    |    0-1.5     | **Простая пауза**        | На паузе без привязки к позиции        |
-|   **1**    |    3    |    любое     | **Выход из игры**        | Покидает игру, долги не платит         |
+| \_inactive | \_intents | \_deadBlinds | State                    | Description                              |
+| :--------: | :-------: | :----------: | ------------------------ | ---------------------------------------- |
+|   **0**    |     0     |      0       | **Active play**          | Player participates in current hand      |
+|   **0**    |     1     |      0       | **Request break til BB** | Player requested break in current hand   |
+|   **0**    |     2     |      0       | **Request simple break** | Player requested break not tied to BB    |
+|   **0**    |     3     |      0       | **Request exit**         | Player requested to leave the game       |
+|   **1**    |     0     |      0       | **Waiting to join**      | New player waits for next hand           |
+|   **1**    |     0     |     >0       | **Ready to return**      | Player wants to return with debt payment |
+|   **1**    |     1     |    0-1.5     | **Break until BB**       | On break, waiting for BB position        |
+|   **1**    |     2     |    0-1.5     | **Simple break**         | On break not tied to position            |
+|   **1**    |     3     |     any      | **Leaving game**         | Leaving game, does not pay debts         |
 
-### Невозможные состояния
+### Impossible States
 
-| \_inactive | \_intents | \_deadBlinds | Причина                                        |
-| :--------: | :-----: | :----------: | ---------------------------------------------- |
-|   **0**    |    0    |      >0      | Активный игрок не может иметь мертвых блайндов |
-|   **0**    |    1    |      >0      | Активный игрок не может иметь долгов           |
-|   **0**    |    2    |      >0      | Активный игрок не может иметь долгов           |
-|   **0**    |    3    |      >0      | Активный игрок не может иметь долгов           |
+| \_inactive | \_intents | \_deadBlinds | Reason                                      |
+| :--------: | :-------: | :----------: | ------------------------------------------- |
+|   **0**    |     0     |     >0       | Active player cannot have dead blinds       |
+|   **0**    |     1     |     >0       | Active player cannot have debts             |
+|   **0**    |     2     |     >0       | Active player cannot have debts             |
+|   **0**    |     3     |     >0       | Active player cannot have debts             |
 
-### Ключевые правила перехода между состояниями:
+### Key State Transition Rules:
 
-1. **Присоединение к игре**: `_inactive: 1, _intents: 0` → игрок получает карты в следующей раздаче
-2. **Взятие паузы**: `_intents: 1` или `_intents: 2` → `_inactive` становится 1 со следующего действия
-3. **Накопление мертвых блайндов**: При `_inactive: 1` и `_intents: 1|2` за каждый пропущенный SB +0.5, за BB +1 (максимум `1.5 BB` в коэффициентах, хранится в абсолютных значениях фишек)
-4. **Возврат с позиции BB**: `_intents: 1` → при достижении BB позиции `_deadBlinds` обнуляется
-5. **Досрочный возврат**: `_intents: 2 → 0` → игрок платит накопленные `_deadBlinds`
-6. **Окончательный выход**: `_intents: 3` → игрок удаляется из всех массивов в следующей раздаче
+1. **Joining the game**: `_inactive: 1, _intents: 0` → player receives cards in the next hand
+2. **Taking a break**: `_intents: 1` or `_intents: 2` → `_inactive` becomes 1 from the next action
+3. **Dead blind accumulation**: When `_inactive: 1` and `_intents: 1|2`, for each missed SB +0.5, for BB +1 (maximum `1.5 BB` in coefficients, stored in absolute chip values)
+4. **Return from BB position**: `_intents: 1` → upon reaching BB position, `_deadBlinds` is reset to zero
+5. **Early return**: `_intents: 2 → 0` → player pays accumulated `_deadBlinds`
+6. **Permanent exit**: `_intents: 3` → player is removed from all arrays in the next hand
 
-## Присоединение к игре
+## Joining the Game
 
-Чтобы `Player3` смог присоединиться к игре, сначала сервер должен отправить персонализированное игровое состояние для `Player3`. Он не сможет увидеть карты игроков.
+For `Player3` to join the game, the server must first send a personalized game state for `Player3`. They won't be able to see other players' cards.
 
-**Запрос игры(любой или конкретной) с блайндами $1\2 от сервера**
-**Клиент**
+**Request for a game (any or specific) with blinds $1\2 from server**
+**Client**
 
 ```
 { // Current hand state, Player1 and Player2 is already playing
@@ -124,29 +124,29 @@ _intents: number[];
 }
 ```
 
-### Клиентская логика
+### Client Logic
 
-#### Права доступа
+#### Access Rights
 
-- Игрок может изменять **ТОЛЬКО** поле `_intents` для себя
-- Игрок может добавлять себя в массивы игроков при присоединении
-- Все остальные изменения будут проигнорированы сервером
+- A player can modify **ONLY** the `_intents` field for themselves
+- A player can add themselves to player arrays when joining
+- All other changes will be ignored by the server
 
-#### Процесс присоединения
+#### Joining Process
 
-1. Игрок добавляет себя в массив `players`
-2. Указывает желаемый `buyIn` в `startingStacks`
-3. Выбирает позицию в `seats`, если хочет сесть на конкретное место
-4. Устанавливает `_intents: 0` (готов играть)
-5. Отправляет состояние на сервер
+1. Player adds themselves to the `players` array
+2. Specifies desired `buyIn` in `startingStacks`
+3. Chooses a position in `seats` if they want to sit in a specific place
+4. Sets `_intents: 0` (ready to play)
+5. Sends state to server
 
-#### После отправки
+#### After Sending
 
-- Клиент рендерит себя за столом без карт
-- Может смотреть текущую раздачу
-- Ожидает начала следующей раздачи
+- Client renders themselves at the table without cards
+- Can watch the current hand
+- Waits for the next hand to begin
 
-**Сервер**
+**Server**
 
 ```
 { // Player3 wants to join the hand
@@ -168,22 +168,22 @@ _intents: number[];
 }
 ```
 
-### Серверная логика
+### Server Logic
 
-Метод `Hand.merge()`:
+The `Hand.merge()` method:
 
-- Видит что в `_intents` есть игроки, которые хотят играть
-- Если игра уже началась (экшен лог не пустой), определяет кто в ней УЖЕ участвует, а остальных игроков помечает как неактивных, изменяя поле `_inactive`
-- Убеждается, что все player-related arrays (`players`, `startingStacks`, `antes`, `_inactive`, `_intents`) изменены должным образом
+- Sees that there are players in `_intents` who want to play
+- If the game has already started (action log is not empty), determines who is ALREADY participating in it, and marks other players as inactive by modifying the `_inactive` field
+- Ensures that all player-related arrays (`players`, `startingStacks`, `antes`, `_inactive`, `_intents`) are modified appropriately
 
-`Player1` и `Player2` доигрывают текущую игру до конца.
+`Player1` and `Player2` finish the current game to the end.
 
-При вызове `Hand.next()` на сервере:
+When calling `Hand.next()` on the server:
 
-- В игровом состоянии есть игроки, для которых `_inactive: 1`, и `_intents: 0`, если у игрока достаточно фишек для продолжения игры он участвует в следующей раздаче и получает карты
-- Активный игрок, который участвует в раздаче, должен иметь итоговые значения `_inactive: 0`, `_intents: 0`
+- In the game state, there are players for whom `_inactive: 1` and `_intents: 0`; if the player has enough chips to continue the game, they participate in the next hand and receive cards
+- An active player participating in the hand should have final values of `_inactive: 0`, `_intents: 0`
 
-**Сервер начал новую игру**
+**Server started a new game**
 
 ```
 { // Player3 joined new hand
@@ -203,7 +203,7 @@ _intents: number[];
 }
 ```
 
-**Player3 получил стейт**
+**Player3 received state**
 
 ```
 { // Player3 recieved new hand
@@ -224,34 +224,34 @@ _intents: number[];
 }
 ```
 
-UI отрисовывается по стейту.
+The UI is rendered based on the state.
 
-## Пауза
+## Break
 
-Любой игрок может взять паузу в любой момент игры. За игроком сохраняется его место за столом, но при возврате в игру, возможны два сценария:
+Any player can take a break at any point in the game. The player's seat at the table is preserved, but when returning to the game, two scenarios are possible:
 
-1. **Кейс А** Игрок пропускает все игры до момента, когда он сможет вернуться на позицию `BB`. В этом случае он _платит_ свой позиционный `BB`, _не платит_ `мертвые блайнды`.
+1. **Case A** The player skips all games until they can return to the `BB` position. In this case, they _pay_ their positional `BB`, but _do not pay_ `dead blinds`.
 
-- В этом случае игрок не получает позиционного преимущества, а просто пропускает оборот стола и продолжает игру с новой раздачи на позиции `BB`
-- В игровом состоянии для поля `_intents` установлено значение `1`.
-- `Мертвые блайнды` накапливаются, на случай если клиент изменит намерения и захочет вернуться в игру раньше
+- In this case, the player does not gain a positional advantage, but simply skips a round of the table and continues the game with a new hand at the `BB` position
+- In the game state, the `_intents` field is set to `1`.
+- `Dead blinds` accumulate in case the client changes their intentions and wants to return to the game earlier
 
-2. **Кейс B** Если игрок возвращается в игру до того, как `button` дойдет до его позиции большого блайнда, он обязан оплатить `мертвые блайнды`.
-   Логика расчета `dead blind` такая: нужно понять, сколько блайндов игрок пропустил _до момента возвращения в игру_, с максимальным размером `dead blind` = 1.5 х `BB`
-   С _каждой новой раздачей_, для каждого неактивного игрока, сумма `мертвых блайндов` которого еще не достигла максимума в `1.5 BB` нужно:
+2. **Case B** If the player returns to the game before the `button` reaches their big blind position, they must pay `dead blinds`.
+   The logic for calculating `dead blind` is: determine how many blinds the player missed _before returning to the game_, with a maximum `dead blind` size = 1.5 × `BB`
+   With _each new hand_, for each inactive player whose `dead blinds` sum has not yet reached the maximum of `1.5 BB`, you need to:
 
-- За каждый пропущенный `SB` в раздаче добавлять к значению игрока в массиве `_deadBlinds` +=`0.5`(должен быть приведен к абсолютному значению фишек)
-- За каждый пропущенный `BB` в раздаче добавлять к значению игрока в массиве `_deadBlinds` +=`1`(должен быть приведен к абсолютному значению фишек)
-- Максимальное значение `_deadBlinds` для любого игрока === `1.5`(должен быть приведен к абсолютному значению фишек)
-- `Мертвые блайнды` НЕ оплачиваются, если игрок покидает игру окончательно: `_inactive: 1` и `_intents: 3`
+- For each missed `SB` in the hand, add to the player's value in the `_deadBlinds` array +=`0.5` (must be converted to absolute chip value)
+- For each missed `BB` in the hand, add to the player's value in the `_deadBlinds` array +=`1` (must be converted to absolute chip value)
+- Maximum value of `_deadBlinds` for any player === `1.5` (must be converted to absolute chip value)
+- `Dead blinds` are NOT paid if the player leaves the game permanently: `_inactive: 1` and `_intents: 3`
 
-Рассмотрим все случаи.
+Let's consider all cases.
 
-### Кейс А
+### Case A
 
-`Player2` решил взять паузу и продолжить игру, когда его очередь дойдет до позиции `BB`
+`Player2` decided to take a break and continue playing when their turn reaches the `BB` position
 
-**Клиент, начальное состояние**
+**Client, initial state**
 
 ```
 { // Player2 wants to pause playing during the hand going
@@ -273,10 +273,10 @@ UI отрисовывается по стейту.
 }
 ```
 
-`Player2` добавляет в массив `_intents` по своему индексу значение `1`. Это значит, что он будет пропускать все игры до его позиции в `BB`.
-Однако `мертвые блайнды` для него все равно нужно рассчитывать, на случай, если игрок примет решение вернуться к игре досрочно.
+`Player2` adds value `1` to the `_intents` array at their index. This means they will skip all games until their `BB` position.
+However, `dead blinds` still need to be calculated for them, in case the player decides to return to the game early.
 
-**Клиент**
+**Client**
 
 ```
 { // Player2 paused the game
@@ -299,14 +299,14 @@ UI отрисовывается по стейту.
 }
 ```
 
-**Сервер**
-_Nota bene: логика учета максимального времени паузы целиком серверная и нас особенно не интересует_
+**Server**
+_Nota bene: the logic for tracking maximum pause time is entirely server-side and doesn't particularly concern us_
 
-Метод `Hand.merge()`:
+The `Hand.merge()` method:
 
-- Сервер видит что `Player2` хочет пропустить текущую и следующие игры (`_intents: 1`)
-- В итоговом игровом состоянии игрок становится неактивным (`_inactive: 1`) и не участвует дальше в раздаче
-- Игрок `Player2` находится на позиции `SB` и уже поставил блайнд, получив карты. `_deadBlinds` = `0`
+- The server sees that `Player2` wants to skip the current and following games (`_intents: 1`)
+- In the final game state, the player becomes inactive (`_inactive: 1`) and no longer participates in the hand
+- Player `Player2` is in the `SB` position and has already posted the blind, receiving cards. `_deadBlinds` = `0`
 
 ```
 {// Player2 paused before he's posted big blind
@@ -330,25 +330,25 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-Игрок `Player2` встал после постановки блайндов, и получил карты в этой раздаче, следовательно, он может вернуться _в этой игре_. Доиграть эту игру он уже не сможет, но _сможет начать со следующей раздачи_ без начисления `_deadBlinds`
+Player `Player2` stood up after posting blinds and received cards in this hand, therefore they can return _in this game_. They can no longer finish this game, but _can start from the next hand_ without being charged `_deadBlinds`
 
-Логика метода `Hand.next()`:
+`Hand.next()` method logic:
 
-**Расчет мертвых блайндов:**
+**Dead blind calculation:**
 
-- Проверяет игроков на паузе (`_inactive: 1`, `_intents: 1|2`)
-- Игроки с `_deadBlinds === 1.5` достигли максимума и пропускаются
-- За пропущенный `SB` добавляет +0.5 к `_deadBlinds` в абсолютных значениях фишек
-- За пропущенный `BB` добавляет +1.0 к `_deadBlinds` в абсолютных значениях фишек
+- Checks players on break (`_inactive: 1`, `_intents: 1|2`)
+- Players with `_deadBlinds === 1.5` have reached maximum and are skipped
+- Adds +0.5 to `_deadBlinds` in absolute chip values for missed `SB`
+- Adds +1.0 to `_deadBlinds` in absolute chip values for missed `BB`
 
-**Возврат в игру:**
+**Returning to the game:**
 
-- Игроки с `_intents: 1` на позиции `BB` возвращаются без оплаты долгов
-  - Устанавливается: `_deadBlinds: 0`, `_inactive: 0`, `_intents: 0`
-- Игроки с недостатком фишек для оплаты долгов и блайндов:
-  - Получают флаги: `_inactive: 1`, `_intents: 3` (автоматический выход)
+- Players with `_intents: 1` at the `BB` position return without paying debts
+  - Set: `_deadBlinds: 0`, `_inactive: 0`, `_intents: 0`
+- Players lacking chips to pay debts and blinds:
+  - Receive flags: `_inactive: 1`, `_intents: 3` (automatic exit)
 
-**Сервер** смерджил игровое состояние
+**Server** merged the game state
 
 ```
 {// Player2 paused before he's posted big blind
@@ -372,8 +372,8 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-**Сервер**
-Игрок `Player2` пропустил `Раздачу 3`, началась новая `Раздача 4`
+**Server**
+Player `Player2` missed `Hand 3`, a new `Hand 4` has begun
 
 ```
 {// Player2 paused and missing hand4 completely
@@ -397,9 +397,9 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-Несмотря на то, что игрок пропускает раздачи до своего следующего `BB` ему НЕ начисляются `мертвые блайнды`. Конкретно в этой ситуации игрок `Player2` находится на позиции `UTG` и не обязан ставить позиционный блайнд. Если он решит вернуться в игру досрочно - не оплачивает ничего и с новой раздачи принимает участие в игре. Если он дожидается своего `BB` - то `мертвые блайнды` обнуляются.
+Even though the player is skipping hands until their next `BB`, they are NOT charged `dead blinds`. In this specific situation, player `Player2` is in the `UTG` position and is not required to post a positional blind. If they decide to return to the game early - they pay nothing and participate in the game from the new hand. If they wait for their `BB` - then `dead blinds` are reset to zero.
 
-Игрок `Player2` пропустил `Раздачу 4`, началась новая `Раздача 5`, в которой он на позиции `BB` 
+Player `Player2` missed `Hand 4`, a new `Hand 5` has begun, in which they are in the `BB` position
 
 ```
 {// Player2 paused till `BB`
@@ -416,7 +416,7 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-**Клиент**
+**Client**
 
 ```
     {// Player2 paused till `BB`
@@ -434,13 +434,13 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-Клиент рендерит UI в котором игрок вернулся в игру и ждет карт от дилера.
+The client renders a UI in which the player has returned to the game and is waiting for cards from the dealer.
 
-### Кейс B
+### Case B
 
-Игрок хочет вернуться к игре досрочно. Например, когда игрок накопил максимальную сумму `мертвых блайндов` и хочет вернуться в игру до своего `BB`.
+The player wants to return to the game early. For example, when the player has accumulated the maximum amount of `dead blinds` and wants to return to the game before their `BB`.
 
-**Сервер**
+**Server**
 
 ```
 { // Player2 is paused
@@ -460,7 +460,7 @@ _Nota bene: логика учета максимального времени п
     }
 ```
 
-**Клиент**
+**Client**
 
 ```
 { // Player2 wants to unpause the game from the next hand
@@ -479,7 +479,7 @@ _Nota bene: логика учета максимального времени п
     }
 ```
 
-**Сервер**
+**Server**
 
 ```
 { // Next hand started
@@ -500,20 +500,20 @@ _Nota bene: логика учета максимального времени п
     }
 ```
 
-# Выход из игры
+# Leaving the Game
 
-Любой игрок может отказаться продолжать игру. Покинуть игру можно следующими способами:
+Any player can refuse to continue playing. There are the following ways to leave the game:
 
-1. Мгновенно(нажать `fold`)
-2. Либо просто не совершая никаких действий в течении времени на ход, и тогда сервер через `Hand.auto()` сам сделает `fold/muck`
-3. Либо отказаться от продолжения игры в следующей раздаче.
+1. Instantly (press `fold`)
+2. Or simply by not taking any actions during the time allowed for a move, and then the server will automatically do `fold/muck` through `Hand.auto()`
+3. Or refuse to continue playing in the next hand.
 
-- При этом, в этой раздаче игрок уже не участвует
-- Флаг состояния `_intents:3` обозначает намерение игрока уйти из игры окончательно
-- Если у него есть `_deadBlinds`, то он их не оплачивает
+- In this case, the player no longer participates in this hand
+- The state flag `_intents:3` indicates the player's intention to leave the game permanently
+- If they have `_deadBlinds`, they do not pay them
 
-**Клиент**
-`Player1` решил покинуть игру, и нажал кнопку `ПОКИНУТЬ ИГРУ [x]` в интерфейсе. На сервер он отправит такое состояние:
+**Client**
+`Player1` decided to leave the game and pressed the `LEAVE GAME [x]` button in the interface. They will send this state to the server:
 
 ```
 { // Player1 wants to exit the hand
@@ -538,19 +538,19 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-Интерфейс перерисовывается, клиент отписывается от обновлений этой игры и попадает в лобби.
+The interface is redrawn, the client unsubscribes from updates for this game and is taken to the lobby.
 
-**Сервер**
-При вызове `Hand.merge()`:
+**Server**
+When calling `Hand.merge()`:
 
-- Видит что игрок `Player1` показал намерение покинуть игру
-- Меняет флаг игрока на `_inactive: 1`
-- Больше игровое состояние не бродкастится этому игроку
+- Sees that player `Player1` has shown an intention to leave the game
+- Changes the player's flag to `_inactive: 1`
+- The game state is no longer broadcast to this player
 
-Логика `Hand.next()`
+`Hand.next()` logic
 
-- Любые игроки, у которых `_inactive: 1` и `_intents:3` удаляются из всех массивов, связанных с игроками
-- Значения `_deadBlinds`, `_inactive`, `_intents` игнорируются
+- Any players with `_inactive: 1` and `_intents:3` are removed from all player-related arrays
+- Values of `_deadBlinds`, `_inactive`, `_intents` are ignored
 
 ```
 { // Player1 no more playing
@@ -569,4 +569,4 @@ _Nota bene: логика учета максимального времени п
 }
 ```
 
-Игрок `Player1` больше обновлений игры не получит.
+Player `Player1` will no longer receive game updates.
