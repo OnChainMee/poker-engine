@@ -128,7 +128,8 @@ export namespace Hand {
 
     for (let i = 0; i < hand.players.length; i++) {
       // Check if player is active (no _inactive array means all active)
-      const isActive = !Array.isArray(hand._inactive) || hand._inactive[i] === 0;
+      // 0 - active, 1 - inactive, 2 - new player
+      const isActive = !Array.isArray(hand._inactive) || hand._inactive[i] === 0 || hand._inactive[i] === 2;
 
       // Check if player has chips
       const hasChips = (hand.startingStacks[i] ?? 0) > 0;
@@ -143,6 +144,10 @@ export namespace Hand {
     }
 
     return false;
+  }
+
+  export function hasBeenDealt(hand: Hand): boolean {
+    return !isComplete(hand) && hand.actions.filter((action) => action.startsWith(`d ${ACTION_DEAL_HOLE}`)).length > 0;
   }
 
   /**

@@ -24,6 +24,8 @@ export interface Game {
   variant: Variant;
   /** Array of players at the table with their current state */
   players: Player[];
+  /** Array of active players at the table */
+  activePlayers: string[];
   /** Community cards on the board */
   board: Card[];
   /** Total amount of chips in the pot */
@@ -155,6 +157,7 @@ export function Game(hand: Hand | Game, actions?: Action[]): Game {
       winnings: 0,
       isInactive: !!hand._inactive?.[i],
     })),
+    activePlayers,
     stats: [],
     board: [],
     buttonIndex,
