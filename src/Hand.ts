@@ -128,8 +128,8 @@ export namespace Hand {
 
     for (let i = 0; i < hand.players.length; i++) {
       // Check if player is active (no _inactive array means all active)
-      // 0 - active, 1 - inactive, 2 - new player
-      const isActive = !Array.isArray(hand._inactive) || hand._inactive[i] === 0 || hand._inactive[i] === 2;
+      // 0 - active, 1 - waiting for BB / sitting out, 2 - new player (inactive until next hand)
+      const isActive = !Array.isArray(hand._inactive) || hand._inactive[i] === 0 || hand._inactive[i] === undefined;
 
       // Check if player has chips
       const hasChips = (hand.startingStacks[i] ?? 0) > 0;
